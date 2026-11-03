@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎵 Voice Autotune — Signal &amp; System Project</title>
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       BRIGHT THEME — Clean, Modern Design
+       ═══════════════════════════════════════════════════════════ */
+    :root {
+      --bg: #F7F8FA;
+      --card: #FFFFFF;
+      --primary: #4F6DF5;
+      --primary-dark: #3B54C4;
+      --primary-light: #EEF2FF;
+      --accent: #00C896;
+      --accent-light: #ECFDF5;
+      --danger: #EF4444;
+      --danger-light: #FEF2F2;
+      --text: #1E293B;
+      --text-light: #64748B;
+      --border: #E2E8F0;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 50px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, var(--primary), #7C3AED);
+      color: white;
+      padding: 26px 0 22px;
+      text-align: center;
+    }
+    .header h1 { font-size: 1.85rem; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { font-size: 0.9rem; color: #C7D2FE; margin-top: 4px; }
+
+    /* ── Container ── */
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0 16px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-accent:hover { background: #00B085; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #DC2626; }
+    .btn-outline {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid #DDE4FF;
+    }
+    .btn-outline:hover { background: #DDE4FF; }
+    .btn-ghost { background: #F1F5F9; color: var(--text); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    /* ── Form controls ── */
+    .form-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .form-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 140px;
+    }
+
+    select {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.875rem;
+      cursor: pointer;
+      outline: none;
+    }
+    select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,109,245,0.15); }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 220px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    .strength-value {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.9rem;
+      min-width: 50px;
+    }
+
+    /* ── Info labels & player ── */
+    .info-text {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      margin-top: 8px;
+    }
+    .info-text.success { color: var(--accent); font-weight: 600; }
+    .info-text.error { color: var(--danger); font-weight: 600; }
+
+    .audio-player-box {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: #FAFBFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .audio-player-box .title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    audio {
+      width: 100%;
+      height: 38px;
+      outline: none;
+    }
+
+    /* ── Waveform display ── */
+    .waveform-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .waveform-box {
+      background: #FAFBFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      min-height: 120px;
+      position: relative;
+    }
+    .waveform-box .label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .waveform-box canvas {
+      width: 100%;
+      height: 80px;
+      display: block;
+    }
+    .waveform-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 80px;
+      color: var(--border);
+      font-size: 0.85rem;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      background: #EEF0F4;
+      padding: 9px 20px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      text-align: center;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      border-top: 1px solid var(--border);
+    }
+
+    .rec-pulse {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+      animation: pulse 1s ease-in-out infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 12px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar.active { display: block; }
+    .progress-bar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #7C3AED);
+      border-radius: 2px;
+      animation: indeterminate 1.5s ease-in-out infinite;
+    }
+    @keyframes indeterminate {
+      0% { width: 0%; margin-left: 0; }
+      50% { width: 60%; margin-left: 20%; }
+      100% { width: 0%; margin-left: 100%; }
+    }
+
+    /* ── Concepts ── */
+    .concepts { margin-top: 8px; }
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .concept-item {
+      background: #FAFBFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+    .concept-item h4 {
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    .concept-item p {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+    .concept-item code {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.78rem;
+    }
+
+    .hidden { display: none !important; }
+    .mt-8 { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+
+    @media (max-width: 640px) {
+      .waveform-container { grid-template-columns: 1fr; }
+      .concept-grid { grid-template-columns: 1fr; }
+      .form-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+      input[type="range"] { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <div class="header">
+    <h1>🎵 Voice Autotune System</h1>
+    <p>Signal &amp; System Project — Pitch Estimation · Discrete Quantization · Resampling</p>
+  </div>
+
+  <div class="container">
+
+    <!-- ── Step 1: Input Source ── -->
+    <div class="card">
+      <div class="card-title">🎤 1. Input Signal Source</div>
+      <div class="card-sep"></div>
+      <div class="btn-row">
+        <button class="btn btn-danger" id="btnRecord" onclick="toggleRecord()">
+          ⏺ Record Voice
+        </button>
+        <label class="btn btn-outline" style="cursor:pointer;">
+          📂 Load .WAV File
+          <input type="file" accept="audio/*" id="fileInput" onchange="loadFile(event)" style="display:none;">
+        </label>
+      </div>
+      <div class="info-text" id="inputInfo">Click "Record Voice" to record with your microphone, or load any .WAV file.</div>
+
+      <!-- Dedicated Original Audio Player -->
+      <div class="audio-player-box hidden" id="boxOrigPlayer">
+        <div class="title">▶ Original Audio Signal (Raw Input)</div>
+        <audio id="playerOrig" controls></audio>
+      </div>
+    </div>
+
+    <!-- ── Step 2: DSP Parameters ── -->
+    <div class="card">
+      <div class="card-title">⚙️ 2. Autotune DSP Parameters</div>
+      <div class="card-sep"></div>
+
+      <div class="form-row">
+        <span class="form-label">Tonic &amp; Scale Grid:</span>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <select id="rootSelect">
+            <option value="C" selected>Tonic: C</option>
+            <option value="C#">Tonic: C# / Db</option>
+            <option value="D">Tonic: D</option>
+            <option value="D#">Tonic: D# / Eb</option>
+            <option value="E">Tonic: E</option>
+            <option value="F">Tonic: F</option>
+            <option value="F#">Tonic: F# / Gb</option>
+            <option value="G">Tonic: G</option>
+            <option value="G#">Tonic: G# / Ab</option>
+            <option value="A">Tonic: A</option>
+            <option value="A#">Tonic: A# / Bb</option>
+            <option value="B">Tonic: B</option>
+          </select>
+
+          <select id="scaleSelect">
+            <option value="major" selected>Major Scale (Heptatonic)</option>
+            <option value="minor">Minor Scale (Heptatonic)</option>
+            <option value="pentatonic">Pentatonic Scale (5 Notes)</option>
+            <option value="blues">Blues Scale (6 Notes)</option>
+            <option value="chromatic">Chromatic Scale (All 12 Notes)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <span class="form-label">Snap Strength (α):</span>
+        <input type="range" id="strengthSlider" min="0" max="100" value="100"
+               oninput="document.getElementById('strengthVal').textContent = this.value + '%'">
+        <span class="strength-value" id="strengthVal">100%</span>
+      </div>
+
+      <div class="form-row">
+        <span class="form-label">Pitch Shift (Δm):</span>
+        <input type="range" id="transposeSlider" min="-12" max="12" value="0"
+               oninput="document.getElementById('transposeVal').textContent = (this.value > 0 ? '+' : '') + this.value + ' semitones'">
+        <span class="strength-value" id="transposeVal">0 semitones</span>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Process & Output ── -->
+    <div class="card">
+      <div class="card-title">✨ 3. Process &amp; Playback</div>
+      <div class="card-sep"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnAutotune" onclick="runAutotune()" disabled>
+          ✨ Run Autotune DSP
+        </button>
+        <button class="btn btn-ghost" id="btnDownload" onclick="downloadResult()" disabled>
+          💾 Download Processed .WAV
+        </button>
+      </div>
+      <div class="progress-bar" id="progressBar"><div class="fill"></div></div>
+      <div class="info-text" id="processInfo"></div>
+
+      <!-- Dedicated Autotuned Audio Player -->
+      <div class="audio-player-box hidden" id="boxProcPlayer">
+        <div class="title" style="color:var(--primary);">✨ Autotuned Output Signal (Processed y[n])</div>
+        <audio id="playerProc" controls></audio>
+      </div>
+    </div>
+
+    <!-- ── Step 4: Waveform Comparison ── -->
+    <div class="card">
+      <div class="card-title">📊 4. Waveform Comparison (Time Domain)</div>
+      <div class="card-sep"></div>
+      <div class="waveform-container">
+        <div class="waveform-box">
+          <div class="label">Original Input Signal x[n]</div>
+          <canvas id="waveOriginal" height="80"></canvas>
+          <div class="waveform-empty" id="waveOrigEmpty">No audio loaded</div>
+        </div>
+        <div class="waveform-box">
+          <div class="label">Autotuned Output Signal y[n]</div>
+          <canvas id="waveProcessed" height="80"></canvas>
+          <div class="waveform-empty" id="waveProcEmpty">Not processed yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Academic Reference ── -->
+    <div class="card concepts">
+      <div class="card-title">📚 Signal &amp; System Concepts Implemented</div>
+      <div class="card-sep"></div>
+      <div class="concept-grid">
+        <div class="concept-item">
+          <h4>🔢 Discrete-Time Sampling</h4>
+          <p>Voice is sampled at rate $f_s$ ($T_s = 1/f_s$). By the Nyquist–Shannon sampling theorem, capturing all frequencies up to $f_s/2$ completely avoids spectral aliasing.</p>
+        </div>
+        <div class="concept-item">
+          <h4>📐 LTI Butterworth Filters</h4>
+          <p>4th-order IIR filters (High-pass 80 Hz, Low-pass 8 kHz) designed in the Z-domain: $H(z) = \prod \frac{b_k(z)}{a_k(z)}$. All poles are strictly inside $|z| &lt; 1$, guaranteeing BIBO stability.</p>
+        </div>
+        <div class="concept-item">
+          <h4>🎯 YIN Autocorrelation</h4>
+          <p>Estimates fundamental period $T_0$ via cumulative mean normalized difference $d[\tau]$. Mathematically tied to the Power Spectral Density through the Wiener–Khinchin theorem.</p>
+        </div>
+        <div class="concept-item">
+          <h4>🔄 Overlap-Add (OLA) Resampling</h4>
+          <p>Pitch shifting resamples blocks by ratio $r = f_{\text{target}}/f_0$ using interpolation kernels. Windowing with a Hann window smooths block boundary discontinuities.</p>
+        </div>
+        <div class="concept-item">
+          <h4>🔗 Cross-Correlation Phase Match</h4>
+          <p>Consecutive frames are aligned via normalized cross-correlation $\rho[k]$ (matched filter theory) before cross-fading, eliminating phase jumps and boundary buzzing.</p>
+        </div>
+        <div class="concept-item">
+          <h4>🎼 Logarithmic Pitch Grid</h4>
+          <p>Musical frequency perception is logarithmic: $m = 12 \log_2(f/440) + 69$. Autotune performs non-linear quantization onto the discrete scale note lattice.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ STATUS BAR ═══ -->
+  <div class="status-bar" id="statusBar">Ready — click "Record Voice" or load a .WAV file to begin.</div>
+
+  <script>
+    let currentFileId = null;
+    let outputFileId = null;
+    let isRecording = false;
+    let recAudioCtx = null;
+    let recStream = null;
+    let recScriptNode = null;
+    let recPcmChunks = [];
+    let recSampleRate = 44100;
+
+    const playerOrig = document.getElementById('playerOrig');
+    const playerProc = document.getElementById('playerProc');
+
+    // ═══════════════════════════════════════════════════════════
+    // RECORDING (Web Audio API → 16-Bit PCM WAV)
+    // ═══════════════════════════════════════════════════════════
+    async function toggleRecord() {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        await startRecording();
+      }
+    }
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: 1,
+            echoCancellation: false,
+            autoGainControl: false,
+            noiseSuppression: false
+          }
+        });
+        recStream = stream;
+
+        recAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        recSampleRate = recAudioCtx.sampleRate;
+
+        const source = recAudioCtx.createMediaStreamSource(stream);
+        recScriptNode = recAudioCtx.createScriptProcessor(4096, 1, 1);
+
+        recPcmChunks = [];
+        recScriptNode.onaudioprocess = (e) => {
+          if (!isRecording) return;
+          recPcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+        };
+
+        const zeroGain = recAudioCtx.createGain();
+        zeroGain.gain.value = 0;
+        source.connect(recScriptNode);
+        recScriptNode.connect(zeroGain);
+        zeroGain.connect(recAudioCtx.destination);
+
+        isRecording = true;
+        const btn = document.getElementById('btnRecord');
+        btn.innerHTML = '<span class="rec-pulse"></span> Stop Recording';
+        btn.className = 'btn btn-danger';
+        setStatus('🔴 Recording in progress… Speak or sing into your mic, then click Stop.');
+      } catch (err) {
+        alert('Microphone access denied: ' + err.message);
+      }
+    }
+
+    function stopRecording() {
+      isRecording = false;
+      if (recScriptNode) { recScriptNode.disconnect(); recScriptNode = null; }
+      if (recStream) { recStream.getTracks().forEach(t => t.stop()); recStream = null; }
+
+      const btn = document.getElementById('btnRecord');
+      btn.innerHTML = '⏺ Record Voice';
+      btn.className = 'btn btn-danger';
+      setStatus('Encoding 16-bit PCM WAV…');
+
+      if (!recPcmChunks || recPcmChunks.length === 0) {
+        setStatus('No audio was captured.');
+        if (recAudioCtx) { recAudioCtx.close(); recAudioCtx = null; }
+        return;
+      }
+
+      let totalSamples = 0;
+      for (const c of recPcmChunks) totalSamples += c.length;
+      const samples = new Float32Array(totalSamples);
+      let offset = 0;
+      for (const c of recPcmChunks) { samples.set(c, offset); offset += c.length; }
+
+      const sr = recSampleRate;
+      if (recAudioCtx) { recAudioCtx.close(); recAudioCtx = null; }
+
+      const wavBlob = encodeWavBlob(samples, sr);
+      uploadRecording(wavBlob);
+    }
+
+    function encodeWavBlob(samples, sampleRate) {
+      const dataSize = samples.length * 2;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+
+      function writeStr(offset, s) {
+        for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
+      }
+
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + dataSize, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // Linear PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, 'data');
+      view.setUint32(40, dataSize, true);
+
+      let idx = 44;
+      for (let i = 0; i < samples.length; i++) {
+        let s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(idx, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        idx += 2;
+      }
+      return new Blob([view], { type: 'audio/wav' });
+    }
+
+    async function uploadRecording(blob) {
+      const form = new FormData();
+      form.append('audio', blob, 'recording.wav');
+
+      try {
+        const res = await fetch('/api/record', { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.error) {
+          setInfo('inputInfo', data.error, 'error');
+          return;
+        }
+
+        currentFileId = data.file_id;
+        outputFileId = null;
+
+        setInfo('inputInfo', `🎤 Recorded Voice: ${data.duration}s @ ${data.sample_rate} Hz (16-bit PCM)`);
+        onAudioLoaded(data.file_id);
+        setStatus('Voice captured! Click "✨ Run Autotune DSP" to process.');
+      } catch (err) {
+        setInfo('inputInfo', 'Upload failed: ' + err.message, 'error');
+      }
+    }
+
+    async function loadFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const form = new FormData();
+      form.append('file', file);
+      setStatus('Uploading audio file…');
+
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.error) {
+          setInfo('inputInfo', data.error, 'error');
+          return;
+        }
+
+        currentFileId = data.file_id;
+        outputFileId = null;
+
+        setInfo('inputInfo', `📂 ${data.filename} — ${data.duration}s @ ${data.sample_rate} Hz`);
+        onAudioLoaded(data.file_id);
+        setStatus('Audio file loaded! Click "✨ Run Autotune DSP" to process.');
+      } catch (err) {
+        setInfo('inputInfo', 'Upload failed: ' + err.message, 'error');
+      }
+      event.target.value = '';
+    }
+
+    function onAudioLoaded(fileId) {
+      document.getElementById('btnAutotune').disabled = false;
+      document.getElementById('btnDownload').disabled = true;
+
+      // Mount audio player
+      playerOrig.src = `/api/audio/${fileId}`;
+      document.getElementById('boxOrigPlayer').classList.remove('hidden');
+
+      // Hide proc player until processed
+      document.getElementById('boxProcPlayer').classList.add('hidden');
+      playerProc.src = '';
+
+      fetchWaveform(fileId, 'original');
+      clearWaveform('processed');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // RUN AUTOTUNE DSP
+    // ═══════════════════════════════════════════════════════════
+    async function runAutotune() {
+      if (!currentFileId) return;
+
+      const scale = document.getElementById('scaleSelect').value;
+      const root = document.getElementById('rootSelect').value;
+      const strength = parseInt(document.getElementById('strengthSlider').value) / 100;
+      const transpose = parseInt(document.getElementById('transposeSlider').value);
+
+      document.getElementById('btnAutotune').disabled = true;
+      document.getElementById('btnAutotune').textContent = '⏳ Processing DSP Chain…';
+      document.getElementById('progressBar').classList.add('active');
+      setStatus('Running YIN Pitch Detection + OLA Resampling + IIR Filtering…');
+
+      try {
+        const res = await fetch('/api/autotune', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            file_id: currentFileId,
+            scale: scale,
+            root: root,
+            strength: strength,
+            transpose: transpose
+          }),
+        });
+
+        const data = await res.json();
+        if (data.error) {
+          setInfo('processInfo', '❌ ' + data.error, 'error');
+          setStatus('Processing failed.');
+        } else {
+          outputFileId = data.output_id;
+          const shiftNote = transpose !== 0 ? ` · Shift: ${(transpose > 0 ? '+' : '') + transpose} semitones` : '';
+          setInfo('processInfo',
+            `✅ Autotune Complete: Tonic ${root} ${scale.toUpperCase()} · Snap Strength: ${(data.strength * 100).toFixed(0)}%${shiftNote} · Duration: ${data.duration}s`,
+            'success');
+          setStatus('✅ Processing complete! Click Play on the Autotuned player below.');
+
+          // Mount and reveal autotuned player
+          playerProc.src = `/api/audio/${data.output_id}`;
+          document.getElementById('boxProcPlayer').classList.remove('hidden');
+          document.getElementById('btnDownload').disabled = false;
+
+          // Auto-play the processed audio
+          playerProc.play().catch(() => {});
+
+          if (data.waveform_original) drawWaveform('waveOriginal', data.waveform_original, '#4F6DF5', '#DDE4FF');
+          if (data.waveform_processed) drawWaveform('waveProcessed', data.waveform_processed, '#7C3AED', '#EDE9FE');
+          document.getElementById('waveOrigEmpty').classList.add('hidden');
+          document.getElementById('waveProcEmpty').classList.add('hidden');
+        }
+      } catch (err) {
+        setInfo('processInfo', '❌ Error: ' + err.message, 'error');
+      }
+
+      document.getElementById('btnAutotune').disabled = false;
+      document.getElementById('btnAutotune').textContent = '✨ Run Autotune DSP';
+      document.getElementById('progressBar').classList.remove('active');
+    }
+
+    function downloadResult() {
+      if (!outputFileId) return;
+      window.location.href = `/api/download/${outputFileId}`;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // WAVEFORM RENDERING
+    // ═══════════════════════════════════════════════════════════
+    function drawWaveform(canvasId, data, lineColor, fillColor) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width - 24;
+      canvas.height = 80;
+      const w = canvas.width, h = canvas.height, mid = h / 2;
+
+      const peak = Math.max(...data.map(Math.abs), 0.001);
+      const norm = data.map(v => v / peak);
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.moveTo(0, mid);
+      for (let i = 0; i < norm.length; i++) {
+        ctx.lineTo((i / norm.length) * w, mid - norm[i] * (mid - 4));
+      }
+      ctx.lineTo(w, mid);
+      ctx.closePath();
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+
+      ctx.beginPath();
+      for (let i = 0; i < norm.length; i++) {
+        const x = (i / norm.length) * w;
+        const y = mid - norm[i] * (mid - 4);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    function clearWaveform(type) {
+      const id = type === 'original' ? 'waveOriginal' : 'waveProcessed';
+      const emptyId = type === 'original' ? 'waveOrigEmpty' : 'waveProcEmpty';
+      const canvas = document.getElementById(id);
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById(emptyId).classList.remove('hidden');
+    }
+
+    async function fetchWaveform(fileId, type) {
+      try {
+        const res = await fetch(`/api/waveform/${fileId}`);
+        const data = await res.json();
+        if (data.waveform) {
+          const color = type === 'original' ? '#4F6DF5' : '#7C3AED';
+          const fill = type === 'original' ? '#DDE4FF' : '#EDE9FE';
+          drawWaveform(type === 'original' ? 'waveOriginal' : 'waveProcessed', data.waveform, color, fill);
+          document.getElementById(type === 'original' ? 'waveOrigEmpty' : 'waveProcEmpty').classList.add('hidden');
+        }
+      } catch (err) {}
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════════
+    function setStatus(text) {
+      document.getElementById('statusBar').textContent = text;
+    }
+
+    function setInfo(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'info-text' + (type ? ' ' + type : '');
+    }
+  </script>
+</body>
+</html>
