@@ -26,7 +26,10 @@ import time
 from pathlib import Path
 
 import numpy as np
-import sounddevice as sd
+try:
+    import sounddevice as sd
+except Exception:
+    sd = None
 import soundfile as sf
 from scipy.signal import butter, sosfilt, sosfilt_zi, firwin, lfilter, lfilter_zi
 
@@ -775,6 +778,10 @@ def run_live_microphone(scale=SCALE_SEMITONES, strength=PITCH_CORRECTION_STRENGT
               f"+{1000.0 * lat / FS:.1f} ms latency)")
     print("Press Ctrl+C to stop.\n")
 
+    if sd is None:
+        print("ERROR: sounddevice is not available in this environment.")
+        return
+
     try:
         with sd.Stream(
             samplerate=FS,
@@ -875,13 +882,16 @@ def process_recorded_file(input_filename,
 
     play_choice = input("Play autotuned output now? (y/n): ").strip().lower()
     if play_choice == "y":
-        print("Playing. Ctrl+C to stop.")
-        try:
-            sd.play(processed_audio, samplerate=samplerate)
-            sd.wait()
-        except KeyboardInterrupt:
-            sd.stop()
-            print("\nPlayback stopped.")
+        if sd is None:
+            print("Playback unavailable: sounddevice is not available in this environment.")
+        else:
+            print("Playing. Ctrl+C to stop.")
+            try:
+                sd.play(processed_audio, samplerate=samplerate)
+                sd.wait()
+            except KeyboardInterrupt:
+                sd.stop()
+                print("\nPlayback stopped.")
 
     return output_path
 

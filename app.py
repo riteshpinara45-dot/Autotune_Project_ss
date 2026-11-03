@@ -32,7 +32,10 @@ from autotune_system_main_phase import (
 )
 
 import soundfile as sf
-import sounddevice as sd
+try:
+    import sounddevice as sd
+except Exception:
+    sd = None
 
 # ──────────────────────────────────────────────────────────
 # App setup
@@ -339,6 +342,12 @@ active_live_system = None
 @app.route("/api/live/start", methods=["POST"])
 def api_live_start():
     global active_live_stream, active_live_system
+    if sd is None:
+        return jsonify(
+            error="Real-time physical microphone streaming is not supported in cloud/headless environments. "
+                  "Please use browser voice recording or file upload."
+        ), 400
+
     if active_live_stream is not None and getattr(active_live_stream, 'active', False):
         return jsonify(status="running", message="Hardware stream already active")
 
@@ -434,14 +443,19 @@ def api_live_status():
 # ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
     # Force UTF-8 output on Windows
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+    try:
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+    port = int(os.environ.get("PORT", 5000))
 
     print("\n" + "=" * 55)
     print("  AUTOTUNE WEB SERVER")
     print("=" * 55)
-    print(f"  Open in browser: http://localhost:5000")
+    print(f"  Open in browser: http://localhost:{port}")
     print(f"  Temp files:      {UPLOAD_DIR}")
     print("=" * 55 + "\n")
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False)

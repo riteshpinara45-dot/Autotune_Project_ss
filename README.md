@@ -21,11 +21,16 @@ A real-time and file-based Autotune and audio filtering system implemented in Py
 ## 📁 Repository Structure
 
 ```
-├── app.py                            # Flask web application server
+├── app.py                            # Flask web application server (Production & Dev)
 ├── autotune_gui.py                   # Desktop Tkinter GUI application
 ├── autotune_system_main_phase.py     # Core DSP engine (filters, YIN, OLA pitch shifter)
 ├── web_static/
 │   └── index.html                    # Web UI frontend
+├── Dockerfile                        # Containerized deployment configuration
+├── Procfile                          # Cloud WSGI runner (Gunicorn)
+├── render.yaml                       # 1-click deployment blueprint for Render
+├── runtime.txt                       # Python version pin (3.11.9)
+├── Aptfile                           # Linux audio packages (libsndfile1, ffmpeg)
 ├── scratch/                          # Verification and testing scripts
 ├── requirements.txt                  # Python dependencies
 └── Differentiation_integration_amp.pdf # Coursework / Project documentation
@@ -33,7 +38,25 @@ A real-time and file-based Autotune and audio filtering system implemented in Py
 
 ---
 
-## 🚀 Getting Started
+## ☁️ Deployment (Cloud Hosting)
+
+The repository is pre-configured for free and fast cloud deployment on **Render**, **Railway**, and **Heroku**.
+
+### Deploy on Render.com (Recommended - Free Tier):
+1. Create a free account at [Render.com](https://render.com/).
+2. Click **New +** > **Web Service**.
+3. Connect your GitHub repository: `https://github.com/riteshpinara45-dot/Autotune_Project_ss`.
+4. Configure settings:
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120`
+5. Click **Create Web Service**. Your app will be live with an HTTPS URL!
+
+*(Alternatively, use **Deploy with Docker** on Render or Railway, which automatically reads the included `Dockerfile`)*.
+
+---
+
+## 🚀 Running Locally
 
 ### 1. Installation
 
@@ -65,5 +88,5 @@ python autotune_gui.py
 - **Python 3**
 - **NumPy & SciPy**: Digital signal processing (IIR/FIR filters, autocorrelation, OLA)
 - **SoundFile & SoundDevice**: Audio I/O and streaming
-- **Flask**: Web backend API
+- **Flask & Gunicorn**: Web backend API and WSGI production server
 - **Tkinter & Matplotlib**: Desktop interface and visualizations
